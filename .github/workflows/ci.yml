@@ -1,0 +1,65 @@
+name: CI
+
+# Builds 3DViewer (app + libs) and runs the hardware-free tests on Linux and
+# Windows. No camera is available in CI: the SDK smoke test only checks that the
+# prebuilt 3DCamera library loads and enumerates zero cameras cleanly.
+# macOS is not built: the bundled mac SDK/OSG binaries are x86_64 only.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build g++ mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev
+
+      # The official qt.io build, not Ubuntu's qtbase5-dev: the prebuilt
+      # thirdparty/quazip links against a symbol (operator delete@Qt_5) that only
+      # the qt.io binaries export.
+      - name: Install Qt5
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          arch: gcc_64
+          archives: qtbase qttools qttranslations icu
+          cache: true
+
+      - name: Configure
+        run: cmake -S src -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON "-DQt5_DIR=$QT_ROOT_DIR/lib/cmake/Qt5"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt5
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          arch: win64_msvc2019_64
+          archives: qtbase qttools qttranslations
+          cache: true
+
+      - name: Configure
+        run: cmake -S src -B build -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTS=ON "-DQt5_DIR=$env:QT_ROOT_DIR/lib/cmake/Qt5"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
