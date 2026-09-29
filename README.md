@@ -14,6 +14,10 @@ drive a Revopoint camera. The application itself is unchanged. This fork adds:
   Ubuntu 22.04 and Windows (VS 2022). Both use the qt.io build of Qt 5.15.2: the prebuilt
   Linux quazip library doesn't link against Ubuntu's `qtbase5-dev`. macOS is not built
   because the bundled mac binaries are x86_64 only.
+- **`revo-bridge`** (`src/csbridge/`): a console helper that drives the camera through
+  the SDK and speaks JSON lines on stdin/stdout, for mhs2revo. See
+  [`src/csbridge/README.md`](src/csbridge/README.md). It is built by default
+  (`-DBUILD_BRIDGE=OFF` to skip) and has not yet been run against a camera.
 - `CLAUDE.md`: notes on the code layout and the SDK surface, for working with Claude.
 
 Build and test (Windows, VS 2022, Qt 5.15.2; Linux is the same with `-G Ninja`):
