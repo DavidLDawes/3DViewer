@@ -45,6 +45,18 @@ cs_add_test(test_pointcloud)
 cs_add_test(test_imageutil csutil)
 
 # prebuilt 3DCamera SDK: loads, reports a version, enumerates with no camera
+if(TARGET revo-bridge)
+    # the bridge's protocol/properties/capture writer against a fake camera
+    cs_add_test(test_bridge csbridgecore)
+
+    # the real executable starts, loads the SDK and enumerates
+    add_test(NAME revo_bridge_selftest COMMAND revo-bridge --selftest)
+    set_tests_properties(revo_bridge_selftest PROPERTIES
+        ENVIRONMENT "${TEST_ENV}"
+        TIMEOUT 60
+        PASS_REGULAR_EXPRESSION "\"event\":\"ready\".*\"ok\":true")
+endif()
+
 if(MSVC)
     cs_add_test(test_sdk_smoke
         optimized ${CAMERA_SDK_LIB}/3DCamera.lib

@@ -110,6 +110,12 @@ add_subdirectory(csviewer)
 
 set_target_properties(csutil cscamera PROPERTIES FOLDER libs)
 
+# revo-bridge: JSON-lines helper process over the SDK (see csbridge/README.md)
+option(BUILD_BRIDGE "Build the revo-bridge helper" ON)
+if(BUILD_BRIDGE)
+    add_subdirectory(csbridge)
+endif()
+
 # hardware-free tests (see tests/CMakeLists.txt)
 option(BUILD_TESTS "Build hardware-free tests" OFF)
 if(BUILD_TESTS)
