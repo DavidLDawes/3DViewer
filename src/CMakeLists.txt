@@ -110,6 +110,13 @@ add_subdirectory(csviewer)
 
 set_target_properties(csutil cscamera PROPERTIES FOLDER libs)
 
+# hardware-free tests (see tests/CMakeLists.txt)
+option(BUILD_TESTS "Build hardware-free tests" OFF)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 if(MSVC)
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${APP_NAME})
 endif()
