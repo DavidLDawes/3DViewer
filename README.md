@@ -11,8 +11,9 @@ drive a Revopoint camera. The application itself is unchanged. This fork adds:
   depth-to-point-cloud math and PLY export, the 16-bit depth PNG round trip, and a smoke
   test that the prebuilt 3DCamera SDK loads and enumerates cleanly with no camera attached.
 - **GitHub Actions CI** (`.github/workflows/ci.yml`): builds the app and runs the tests on
-  Ubuntu 22.04 and Windows (VS 2022, Qt 5.15.2). macOS is not built because the bundled
-  mac binaries are x86_64 only.
+  Ubuntu 22.04 and Windows (VS 2022). Both use the qt.io build of Qt 5.15.2: the prebuilt
+  Linux quazip library doesn't link against Ubuntu's `qtbase5-dev`. macOS is not built
+  because the bundled mac binaries are x86_64 only.
 - `CLAUDE.md`: notes on the code layout and the SDK surface, for working with Claude.
 
 Build and test (Windows, VS 2022, Qt 5.15.2; Linux is the same with `-G Ninja`):

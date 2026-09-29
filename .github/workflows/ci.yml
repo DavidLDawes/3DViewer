@@ -16,16 +16,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt5 and build tools
+      - name: Install build tools
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            cmake ninja-build g++ \
-            qtbase5-dev qttools5-dev qttools5-dev-tools libqt5opengl5-dev \
-            mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev
+            cmake ninja-build g++ mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev
+
+      # The official qt.io build, not Ubuntu's qtbase5-dev: the prebuilt
+      # thirdparty/quazip links against a symbol (operator delete@Qt_5) that only
+      # the qt.io binaries export.
+      - name: Install Qt5
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          arch: gcc_64
+          archives: qtbase qttools qttranslations icu
+          cache: true
 
       - name: Configure
-        run: cmake -S src -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+        run: cmake -S src -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON "-DQt5_DIR=$QT_ROOT_DIR/lib/cmake/Qt5"
 
       - name: Build
         run: cmake --build build --parallel

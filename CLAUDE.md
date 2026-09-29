@@ -66,8 +66,9 @@ itself never calls, so which models honor them is unverified.
   ctest --test-dir build -C Release --output-on-failure
   ```
 
-- Linux: same, with `qtbase5-dev qttools5-dev qttools5-dev-tools libqt5opengl5-dev`
-  from apt and `-G Ninja -DCMAKE_BUILD_TYPE=Release`. See `.github/workflows/ci.yml`.
+- Linux: same, with the qt.io Qt 5.15.2 `gcc_64` build (not Ubuntu's `qtbase5-dev`:
+  the prebuilt quazip needs a symbol only qt.io's Qt exports) and `-G Ninja
+  -DCMAKE_BUILD_TYPE=Release`. See `.github/workflows/ci.yml`.
 - **Configuring rewrites tracked files**: `src/csviewer/CMakeLists.txt` runs `lupdate`/
   `lrelease` at configure time, which touches `src/csviewer/translations/*.ts/.qm`.
   Don't commit those unless you meant to change translations
