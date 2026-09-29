@@ -13,8 +13,10 @@ status, and what results it produces.
 
 Keep the fork mergeable with upstream: minimal changes, upstream style (4-space indent,
 `CS`/`cs::` naming, Qt signal/slot idioms, the GPL header on new files). Fork-only
-additions so far: `CLAUDE.md`, `src/tests/`, `.github/workflows/ci.yml`, the
-`BUILD_TESTS` option in `src/CMakeLists.txt`, and the fork section of `README.md`.
+additions so far: `CLAUDE.md`, `src/csbridge/` (revo-bridge), `src/tests/`,
+`.github/workflows/ci.yml`, the `BUILD_BRIDGE`/`BUILD_TESTS` options in
+`src/CMakeLists.txt`, and the fork section of `README.md`. Keep fork code in its own
+directories so upstream merges stay trivial.
 
 ## Layout
 
@@ -24,6 +26,7 @@ additions so far: `CLAUDE.md`, `src/tests/`, `.github/workflows/ci.yml`, the
 | `src/csutil/` | `csutil.dll/.so`: logging, 16-bit PNG (libpng), Qt helpers |
 | `src/cscamera/` | `cscamera.dll/.so`: the camera layer. `CSCamera` wraps the SDK (`cscamera.cpp`), `CameraThread` runs it, `process/` turns frames into depth/RGB/point-cloud output, `CameraCaptureTool`/`OutputSaver` save captures, `CapturedZipParser`/`FormatConverter` re-export saved `.zip` captures |
 | `src/csviewer/` | The Qt GUI (`3DViewer` executable), OSG 3D rendering |
+| `src/csbridge/` | `revo-bridge` (fork addition): JSON-lines helper process over the SDK, used by mhs2revo. Protocol and design in `src/csbridge/README.md` |
 | `src/tests/` | Hardware-free Qt Test / CTest tests (fork addition) |
 | `thirdparty/3DCamera/` | **Prebuilt, closed-source** Revopoint SDK (v3.2.23): headers + `3DCamera.dll`/`.lib`, `lib3DCamera.so`, `lib3DCamera.dylib` |
 | `thirdparty/{osg3.6.5,yaml-cpp0.6.0,quazip,libpng}` | Prebuilt dependencies per platform |
@@ -90,10 +93,29 @@ camera:
 - `test_sdk_smoke` - the prebuilt SDK loads, reports its version, enumerates (0 cameras
   in CI), and refuses trigger/property calls when nothing is connected. It never
   connects to or changes a camera, even if one is attached.
+- `test_bridge` - revo-bridge's protocol, property table and capture writer against a
+  fake camera backend (`FakeBackend` in the test).
+- `revo_bridge_selftest` - the real `revo-bridge --selftest` starts and enumerates.
 
 These do not replace testing with a real camera. **Say plainly when something was not
 verified on hardware**; as of this writing nothing in this fork has been run against a
 camera.
+
+## revo-bridge notes
+
+- `BridgeServer` has no stdio and no SDK library dependency; everything camera-facing
+  goes through `CameraBackend`, so it is tested with a fake. Keep it that way: new
+  commands go in `BridgeServer`, new SDK calls go in `CameraBackend` + `SdkBackend` +
+  the test's `FakeBackend`.
+- `PropertyExtension` is a **union**: zero it, then set only the one field for the
+  property being written. A fake that stores one shared union gets wrong values back,
+  because the fields overlap (a real bug in the first version of the test).
+- Every property the bridge exposes is in `propertymap.cpp`'s allow-list, with
+  `usedBy3DViewer` saying whether 3DViewer itself exercises it. Keep that flag honest.
+- stdout is protocol-only (`main.cpp` moves the real stdout aside and points fd 1 at
+  stderr). Log to stderr.
+- The protocol is versioned (`PROTOCOL_VERSION`). mhs2revo depends on it, so bump the
+  version for incompatible changes and update `src/csbridge/README.md`.
 
 ## Practices
 
